@@ -46,7 +46,7 @@ func registerClient() *TestService {
 		{
 			Service:           &act,
 			ServiceName:       "TestService",
-			RemoteServiceName: "TestService",
+			RemoteServiceName: "TestCoreService",
 		},
 	}, true)
 	return &act
@@ -56,10 +56,10 @@ func registerServer() {
 	var act = TestService{}.New()
 
 	//远程服务信息
-	var service = "TestService"
+	var service = "TestCoreService"
 	var address = "127.0.0.1"
 	var consul = "127.0.0.1:8500"
-	var port = 1234
+	var port = 8098
 
 	var services = make(map[string]interface{}, 0)
 	services["TestService"] = &act
