@@ -68,5 +68,7 @@ easyrpc_discovery.EnableDiscoveryClient("127.0.0.1:8500", "App", "127.0.0.1", 85
 //下载consul最新版，windows版(可选)
 consul.exe agent -dev  -client 0.0.0.0 -ui
 ```
+* 如果以上配置正确，打开浏览器 http://localhost:8500 可以看到服务启动成功
+![Image text](https://zhuxiujia.github.io/gomybatis.io/assets/consul_admin.png)
 * TODO 
 未来会支持更多注册中心，etcd
