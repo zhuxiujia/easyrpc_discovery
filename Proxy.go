@@ -2,6 +2,7 @@ package easyrpc_discovery
 
 type RpcServiceBean struct {
 	Service           interface{}
+	ServiceName       string
 	RemoteServiceName string
 }
 
