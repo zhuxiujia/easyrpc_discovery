@@ -52,6 +52,7 @@ easyrpc_discovery.EnableDiscoveryClient("127.0.0.1:8500", "App", "127.0.0.1", 85
 	}, []easyrpc_discovery.RpcServiceBean{
 		{
 			Service:           &act,
+			ServiceName:       "ActivityService",
 			RemoteServiceName: "ActivityService",
 		},
 	}, true)
