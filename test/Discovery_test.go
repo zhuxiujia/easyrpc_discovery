@@ -1,8 +1,9 @@
-package easyrpc_discovery
+package test
 
 import (
 	"encoding/json"
 	"errors"
+	"github.com/zhuxiujia/easyrpc_discovery"
 	"testing"
 	"time"
 )
@@ -39,9 +40,9 @@ func TestEnableDiscoveryService(t *testing.T) {
 
 func registerClient() *TestService {
 	var act TestService
-	EnableDiscoveryClient("127.0.0.1:8500", "TestApp", "127.0.0.1", 8500, 5*time.Second, &RpcConfig{
+	easyrpc_discovery.EnableDiscoveryClient("127.0.0.1:8500", "TestApp", "127.0.0.1", 8500, 5*time.Second, &easyrpc_discovery.RpcConfig{
 		RetryTime: 1,
-	}, []RpcServiceBean{
+	}, []easyrpc_discovery.RpcServiceBean{
 		{
 			Service:           &act,
 			ServiceName:       "TestService",
@@ -62,5 +63,5 @@ func registerServer() {
 
 	var services = make(map[string]interface{}, 0)
 	services["TestService"] = &act
-	EnableDiscoveryService(consul, service, services, address, port, 5*time.Second)
+	easyrpc_discovery.EnableDiscoveryService(consul, service, services, address, port, 5*time.Second)
 }
