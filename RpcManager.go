@@ -35,10 +35,9 @@ func EnableDiscoveryClient(consulAddress string, clientName string, client_addre
 	var fullAddress = client_address + strconv.Itoa(client_port)
 
 	for _, v := range serviceBeanArray {
-		var remoteServiceName = v.RemoteServiceName
 		//Todo create link
 		var getClientFunc = func(arg *RpcClient) error {
-			return LoadBalance(&manager, arg, fullAddress, remoteServiceName)
+			return LoadBalance(&manager, arg, fullAddress, v.RemoteServiceName)
 		}
 		ProxyClient(v, getClientFunc, manager.RpcConfig.RetryTime)
 	}
@@ -105,7 +104,7 @@ func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, 
 		return errors.New("no service '" + remoteService + "' available!")
 	}
 	if rpcClient.Object == nil {
-		rpcClient.Object = createClient(remoteService, rpcClient.Address)
+		(*rpcClient).Object = createClient(remoteService, rpcClient.Address)
 		if rpcClient.Object == nil {
 			return errors.New("no service '" + remoteService + "' available!")
 		}

@@ -28,6 +28,7 @@ func (it TestService) New() TestService {
 func TestEnableDiscoveryService(t *testing.T) {
 
 	go registerServer()
+	time.Sleep(time.Second)
 
 	var client = registerClient()
 	for i := 0; i < 5; i++ {
@@ -35,6 +36,7 @@ func TestEnableDiscoveryService(t *testing.T) {
 			Name: "test",
 		})
 		time.Sleep(time.Second)
+		println("done:", i)
 	}
 }
 
