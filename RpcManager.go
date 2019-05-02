@@ -94,7 +94,7 @@ func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, 
 				rpcConnectionFactory.Close(client.Object.(*easyrpc.Client))
 			})
 		}
-		AddOne(manager, remoteService, arg.Address, createClient)
+		arg.Object = nil
 	}
 
 	if rpcLoadBalanceClient == nil || len(rpcLoadBalanceClient.RpcClientsMap) == 0 {
