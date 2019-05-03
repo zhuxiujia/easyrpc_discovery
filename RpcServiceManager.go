@@ -78,7 +78,6 @@ func FetchServiceMap(clientName string, manager *RpcServiceManager, client *cons
 		manager.ServiceAddressMap[serviceName] = rpcLoadBalanceClient
 	}
 	manager.ServiceMap = newServiceList
-	println("=========================fetch discovery finish==================")
 }
 
 func AddOne(manager *RpcServiceManager, remoteService string, address string, createClient func(serviceName string, address string) interface{}) interface{} {
