@@ -2,25 +2,25 @@ package test
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/zhuxiujia/easyrpc_discovery"
 	"testing"
 	"time"
 )
 
 type TestVO struct {
-	Name string
+	Name string `json:"name"`
 }
 
 type TestService struct {
-	AddActivity func(arg TestVO) error
+	AddActivity func(arg TestVO, result *TestVO) error
 }
 
 func (it TestService) New() TestService {
-	it.AddActivity = func(arg TestVO) error {
+	it.AddActivity = func(arg TestVO, result *TestVO) error {
 		var d, _ = json.Marshal(arg)
-		println("add activity", string(d)) //打印远程参数
-		return errors.New("fuck error")
+		println("arg:", string(d)) //打印远程参数
+		result.Name = "ffff"
+		return nil
 	}
 	return it
 }
@@ -32,11 +32,16 @@ func TestEnableDiscoveryService(t *testing.T) {
 
 	var client = registerClient()
 	for i := 0; i < 5; i++ {
-		client.AddActivity(TestVO{
+		var r = TestVO{}
+
+		var e = client.AddActivity(TestVO{
 			Name: "test",
-		})
+		}, &r)
 		time.Sleep(time.Second)
-		println("done:", i)
+		if e != nil {
+			println(e.Error())
+		}
+		println("done:", r.Name)
 	}
 }
 
