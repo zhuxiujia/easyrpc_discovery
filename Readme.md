@@ -12,6 +12,7 @@ go get github.com/zhuxiujia/easyrpc_discovery
 go get github.com/zhuxiujia/easyrpc
 go get github.com/hashicorp/consul
 ```
+* 下载consul（为什么使用consul，支持健康检查，kv，注册中心）最新客户端 https://www.consul.io/
 
 * 首先定义服务
 ```
