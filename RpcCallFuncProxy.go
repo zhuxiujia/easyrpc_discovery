@@ -13,7 +13,23 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retr
 	}
 	Proxy(bean.Service, func(funcField reflect.StructField, field reflect.Value) func(arg ProxyArg) []reflect.Value {
 		return func(arg ProxyArg) []reflect.Value {
-			var result = ""
+			var result interface{} = nil
+			if arg.ArgsLen > 0 {
+				if arg.ArgsLen == 1 {
+					//1
+					if funcField.Type.In(0).Kind() == reflect.Ptr {
+						result = arg.Args[0].Interface()
+					}
+				} else {
+					//2
+					if funcField.Type.In(0).Kind() == reflect.Ptr {
+						result = arg.Args[0].Interface()
+					} else if funcField.Type.In(1).Kind() == reflect.Ptr {
+						result = arg.Args[1].Interface()
+					}
+				}
+			}
+
 			var e error
 			var rpcClient RpcClient
 			e = GetClient(&rpcClient)
@@ -25,7 +41,7 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retr
 					continue
 				}
 				var remoteServiceName = bean.ServiceName + "." + funcField.Name
-				e = rpcClient.Object.(*easyrpc.Client).Call(remoteServiceName, arg.Args[0].Interface(), &result)
+				e = rpcClient.Object.(*easyrpc.Client).Call(remoteServiceName, arg.Args[0].Interface(), result)
 				if e == nil {
 					return makeErrors(e, funcField)
 				} else if e.Error() == ConnectError {
