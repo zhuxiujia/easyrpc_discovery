@@ -36,7 +36,7 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retr
 						e = clientErrr
 					}
 				} else {
-					println("[easyrpc] " + e.Error())
+					return makeErrors(e, funcField)
 				}
 			}
 			return makeErrors(e, funcField)
