@@ -44,7 +44,7 @@ func EnableDiscoveryClient(consulAddress string, clientName string, client_addre
 }
 
 //定义一个服务发现服务端
-func EnableDiscoveryService(consulAddress string, serviceName string, serviceBeans map[string]interface{}, server_address string, server_port int, duration time.Duration) {
+func EnableDiscoveryService(consulAddress string, serviceName string, serviceBeans map[string]interface{}, server_address string, server_port int, duration time.Duration, deferFunc func(recover interface{}) string) {
 	//轮询注册 服务发现
 	var serviceId = serviceName + ":" + strconv.Itoa(server_port)
 	var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port)
@@ -57,7 +57,7 @@ func EnableDiscoveryService(consulAddress string, serviceName string, serviceBea
 	})
 	//注册Rpc服务
 	for _, v := range serviceBeans {
-		easyrpc.Register(v)
+		easyrpc.RegisterDefer(v, deferFunc)
 	}
 	if server_address == "localhost" || server_address == "127.0.0.1" {
 		server_address = ""
