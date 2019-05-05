@@ -9,7 +9,6 @@
 * 使用方法
 ```
 go get github.com/zhuxiujia/easyrpc_discovery
-go get github.com/zhuxiujia/easyrpc
 ```
 * 下载consul（为什么使用consul，支持健康检查，kv，注册中心）最新客户端 https://www.consul.io/
 
