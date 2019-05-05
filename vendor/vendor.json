@@ -1,0 +1,12 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "jo80FSEn6pqBNNSlvRtllGLTNhk=",
+			"path": "github.com/hashicorp/consul/api",
+			"revision": ""
+		}
+	],
+	"rootPath": "github.com/zhuxiujia/easyrpc_discovery"
+}
