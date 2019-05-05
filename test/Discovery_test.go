@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/zhuxiujia/easyrpc_discovery"
 	"testing"
 	"time"
@@ -70,5 +71,7 @@ func registerServer() {
 
 	var services = make(map[string]interface{}, 0)
 	services["TestService"] = &act
-	easyrpc_discovery.EnableDiscoveryService(consul, service, services, address, port, 5*time.Second)
+	easyrpc_discovery.EnableDiscoveryService(consul, service, services, address, port, 5*time.Second, func(recover interface{}) string {
+		return fmt.Sprint(recover)
+	})
 }
