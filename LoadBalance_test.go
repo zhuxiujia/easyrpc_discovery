@@ -21,7 +21,7 @@ func TestDoBalance(t *testing.T) {
 	})
 	var c = RpcLoadBalanceClient{}
 	c.SetRpcClients(clients)
-	var lt = LoadBalance_Random
+	var lt = LoadBalanceType_Random
 
 	var total = 1000000
 

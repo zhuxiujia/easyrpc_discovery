@@ -63,9 +63,9 @@ func (this *RpcLoadBalanceClient) DeleteAll(DeleteFunc func(client *RpcClient)) 
 type LoadBalanceType int
 
 const (
-	LoadBalance_Random LoadBalanceType = iota //随机
-	LoadBalance_Round                         //加权轮询
-	LoadBalance_HASH                          //源地址哈希法
+	LoadBalanceType_Random LoadBalanceType = iota //随机
+	LoadBalanceType_Round                         //加权轮询
+	LoadBalanceType_HASH                          //源地址哈希法
 )
 
 //负载均衡实现类
@@ -76,14 +76,14 @@ func DoBalance(requestIp string, balanceClient *RpcLoadBalanceClient, balanceTyp
 	}
 	if balanceType == nil {
 		//default
-		var def = LoadBalance_Random
+		var def = LoadBalanceType_Random
 		balanceType = &def
 	}
-	if *balanceType == LoadBalance_Random {
+	if *balanceType == LoadBalanceType_Random {
 		return randomPickClient(balanceClient)
-	} else if *balanceType == LoadBalance_Round {
+	} else if *balanceType == LoadBalanceType_Round {
 		return roundPickClient(balanceClient)
-	} else if *balanceType == LoadBalance_HASH {
+	} else if *balanceType == LoadBalanceType_HASH {
 		return hashPickClient(balanceClient, requestIp)
 	} else {
 		return nil
