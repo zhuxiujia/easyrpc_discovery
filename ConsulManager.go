@@ -41,13 +41,14 @@ func CreateAgentServiceRegistration(consulCheckType ConsulCheckType, id string, 
 	return registration
 }
 
-func DoRegister(registration *consulapi.AgentServiceRegistration, client *consulapi.Client) {
+func DoRegister(registration *consulapi.AgentServiceRegistration, client *consulapi.Client) error {
 	err := client.Agent().ServiceRegister(registration)
 	if err != nil {
 		log.Println("[ConsulManager]Register Consul Rpc Service error=", err)
 	} else {
 		log.Println("[ConsulManager]Register Consul Rpc Service success.")
 	}
+	return err
 }
 
 func CreateConsulApiClient(consulAddress string) *consulapi.Client {

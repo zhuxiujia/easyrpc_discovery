@@ -7,6 +7,7 @@ import (
 	"github.com/zhuxiujia/easyrpc/easy_jsonrpc"
 	"log"
 	"net"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -45,18 +46,20 @@ func EnableDiscoveryClient(consulAddress string, clientName string, client_addre
 
 //定义一个服务发现服务端
 func EnableDiscoveryService(consulAddress string, serviceName string, serviceBeans map[string]interface{}, server_address string, server_port int, duration time.Duration, deferFunc func(recover interface{}) string) {
-	//轮询注册 服务发现
-	var serviceId = serviceName + ":" + strconv.Itoa(server_port)
-	var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port)
-	var client = CreateConsulApiClient(consulAddress)
-	var lastTime = time.Now()
-	StartTimer(StartType_Now, Execute_coroutine, duration, func() {
-		lastTime = time.Now()
-		DoRegister(reg, client)
-		reg.Tags = []string{serviceName + PrintTimeString(" ", lastTime, time.Now(), time.Millisecond)}
-	})
+
 	//注册Rpc服务
 	for _, v := range serviceBeans {
+		serviceName := reflect.TypeOf(v).Elem().Name()
+		//轮询注册 服务发现
+		var serviceId = serviceName + ":" + strconv.Itoa(server_port)
+		var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port)
+		var client = CreateConsulApiClient(consulAddress)
+		var lastTime = time.Now()
+		StartTimer(StartType_Now, Execute_coroutine, duration, func() {
+			lastTime = time.Now()
+			DoRegister(reg, client)
+			reg.Tags = []string{serviceName + PrintTimeString(" ", lastTime, time.Now(), time.Millisecond)}
+		})
 		easyrpc.RegisterDefer(v, deferFunc)
 	}
 	if server_address == "localhost" || server_address == "127.0.0.1" {
