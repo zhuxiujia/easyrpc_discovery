@@ -13,7 +13,6 @@ import (
 )
 
 var rpcConnectionFactory = RpcConnectionFactory{}
-var lastTime = time.Now()
 
 //定义一个服务发现客户端
 func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, clientName string, client_address string, client_port int, duration time.Duration, config *RpcConfig, serviceBeanArray []RpcServiceBean, registerClient bool) {
@@ -29,9 +28,8 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 		if registerClient == false {
 			return
 		}
-		lastTime = time.Now()
 		DoRegister(reg, client)
-		reg.Tags = []string{clientName + PrintTimeString(" ", lastTime, time.Now(), time.Millisecond)}
+		reg.Tags = []string{clientName}
 	})
 	var fullAddress = client_address + strconv.Itoa(client_port)
 
@@ -54,11 +52,9 @@ func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interf
 		var serviceId = serviceName + ":" + strconv.Itoa(server_port)
 		var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port)
 		var client = CreateConsulApiClient(consulAddress)
-		var lastTime = time.Now()
 		StartTimer(StartType_Now, Execute_coroutine, duration, func() {
-			lastTime = time.Now()
 			DoRegister(reg, client)
-			reg.Tags = []string{serviceName + PrintTimeString(" ", lastTime, time.Now(), time.Millisecond)}
+			reg.Tags = []string{serviceName}
 		})
 		easyrpc.RegisterDefer(v, deferFunc)
 	}
