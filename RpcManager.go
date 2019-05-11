@@ -16,7 +16,7 @@ var rpcConnectionFactory = RpcConnectionFactory{}
 var lastTime = time.Now()
 
 //定义一个服务发现客户端
-func EnableDiscoveryClient(consulAddress string, clientName string, client_address string, client_port int, duration time.Duration, config *RpcConfig, serviceBeanArray []RpcServiceBean, registerClient bool) {
+func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, clientName string, client_address string, client_port int, duration time.Duration, config *RpcConfig, serviceBeanArray []RpcServiceBean, registerClient bool) {
 	var client = CreateConsulApiClient(consulAddress)
 	var serviceId = clientName + ":" + strconv.Itoa(client_port)
 	var reg = CreateAgentServiceRegistration(TCP, serviceId, clientName, client_address, client_port)
@@ -38,7 +38,7 @@ func EnableDiscoveryClient(consulAddress string, clientName string, client_addre
 	for _, v := range serviceBeanArray {
 		//Todo create link
 		var getClientFunc = func(arg *RpcClient) error {
-			return LoadBalance(&manager, arg, fullAddress, v.RemoteServiceName)
+			return LoadBalance(&manager, arg, fullAddress, v.RemoteServiceName, balanceType)
 		}
 		ProxyClient(v, getClientFunc, manager.RpcConfig.RetryTime)
 	}
@@ -84,7 +84,7 @@ func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interf
 /**
  * 随机选取服务
  */
-func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, remoteService string) error {
+func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, remoteService string, balanceType *LoadBalanceType) error {
 	var rpcLoadBalanceClient = manager.ServiceAddressMap[remoteService]
 
 	if arg != nil && arg.Shutdown == true {
@@ -102,7 +102,7 @@ func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, 
 	if rpcLoadBalanceClient == nil || len(rpcLoadBalanceClient.RpcClientsMap) == 0 {
 		return errors.New("no service '" + remoteService + "' available!")
 	}
-	var rpcClient = DoBalance(clientAddr, rpcLoadBalanceClient, nil)
+	var rpcClient = DoBalance(clientAddr, rpcLoadBalanceClient, balanceType)
 	if rpcClient == nil {
 		return errors.New("no service '" + remoteService + "' available!")
 	}
