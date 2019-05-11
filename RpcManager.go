@@ -29,7 +29,6 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 			return
 		}
 		DoRegister(reg, client)
-		reg.Tags = []string{clientName}
 	})
 	var fullAddress = client_address + strconv.Itoa(client_port)
 
@@ -54,7 +53,6 @@ func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interf
 		var client = CreateConsulApiClient(consulAddress)
 		StartTimer(StartType_Now, Execute_coroutine, duration, func() {
 			DoRegister(reg, client)
-			reg.Tags = []string{serviceName}
 		})
 		easyrpc.RegisterDefer(v, deferFunc)
 	}
