@@ -128,7 +128,9 @@ func clearAllClient(m map[string]*RpcLoadBalanceClient) {
 	for _, item := range m {
 		if item != nil {
 			item.DeleteAll(func(client *RpcClient) {
-				rpcConnectionFactory.Close(client.Object.(*easyrpc.Client))
+				if client != nil && client.Object != nil {
+					rpcConnectionFactory.Close(client.Object.(*easyrpc.Client))
+				}
 			})
 		}
 	}
