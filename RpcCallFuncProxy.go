@@ -41,7 +41,11 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retr
 					continue
 				}
 				var remoteServiceName = bean.ServiceName + "." + funcField.Name
-				e = rpcClient.Object.(*easyrpc.Client).Call(remoteServiceName, arg.Args[0].Interface(), result)
+				var callArg interface{}
+				if arg.ArgsLen > 0 {
+					callArg = arg.Args[0].Interface()
+				}
+				e = rpcClient.Object.(*easyrpc.Client).Call(remoteServiceName, callArg, result)
 				if e == nil {
 					return makeErrors(e, funcField)
 				} else if e.Error() == ConnectError {
