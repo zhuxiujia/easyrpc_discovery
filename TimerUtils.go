@@ -18,6 +18,9 @@ const (
 	Execute_coroutine
 )
 
+var timerStarted = false
+var jobChain = []func(){}
+
 //启动Timer,调用它请不要使用 go 关键字,内部已经使用协程处理
 func StartTimer(startType StartType, exeType ExecuteType, d time.Duration, fn func()) {
 	if startType == StartType_Now {
@@ -31,8 +34,15 @@ func StartTimer(startType StartType, exeType ExecuteType, d time.Duration, fn fu
 	}
 }
 func run(fn func(), d time.Duration) {
+	jobChain = append(jobChain, fn)
+	if timerStarted == true {
+		return
+	}
+	timerStarted = true
 	ticker := time.NewTicker(d)
 	for _ = range ticker.C {
-		fn()
+		for _, v := range jobChain {
+			v()
+		}
 	}
 }
