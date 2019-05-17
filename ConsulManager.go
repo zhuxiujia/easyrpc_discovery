@@ -1,8 +1,8 @@
 package easyrpc_discovery
 
 import (
+	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
-	"log"
 	"strconv"
 )
 
@@ -14,7 +14,7 @@ const (
 )
 
 func CreateAgentServiceRegistration(consulCheckType ConsulCheckType, id string, serviceName string, address string, port int, time string) *consulapi.AgentServiceRegistration {
-	log.Println("[ConsulManager]start register consul Rpc Service")
+	fmt.Println("[ConsulManager]start register consul Rpc Service")
 	//创建一个新服务。
 	registration := new(consulapi.AgentServiceRegistration)
 	registration.Address = address
@@ -44,9 +44,9 @@ func CreateAgentServiceRegistration(consulCheckType ConsulCheckType, id string, 
 func DoRegister(registration *consulapi.AgentServiceRegistration, client *consulapi.Client) error {
 	err := client.Agent().ServiceRegister(registration)
 	if err != nil {
-		log.Println("[ConsulManager]Register Consul Rpc Service error=", err)
+		fmt.Println("[ConsulManager]Register Consul Rpc Service error=", err)
 	} else {
-		log.Println("[ConsulManager]Register Consul Rpc Service success.")
+		fmt.Println("[ConsulManager]Register Consul Rpc Service success.")
 	}
 	return err
 }
@@ -56,7 +56,7 @@ func CreateConsulApiClient(consulAddress string) *consulapi.Client {
 	config.Address = consulAddress
 	client, err := consulapi.NewClient(config)
 	if err != nil {
-		log.Println("[ConsulManager]new consul client error : ", err)
+		fmt.Println("[ConsulManager]new consul client error : ", err)
 	}
 	return client
 }
