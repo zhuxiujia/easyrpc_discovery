@@ -41,8 +41,12 @@ func run(fn func(), d time.Duration) {
 	timerStarted = true
 	ticker := time.NewTicker(d)
 	for _ = range ticker.C {
-		for _, v := range jobChain {
+		for _, v := range *getJob() {
 			v()
 		}
 	}
+}
+
+func getJob() *[]func() {
+	return &jobChain
 }
