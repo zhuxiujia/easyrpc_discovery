@@ -13,13 +13,13 @@ import (
 )
 
 var rpcConnectionFactory = RpcConnectionFactory{}
+var manager = RpcServiceManager{}.New()
 
 //定义一个服务发现客户端
 func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, clientName string, client_address string, client_port int, duration time.Duration, config *RpcConfig, serviceBeanArray []RpcServiceBean, registerClient bool) {
 	var client = CreateConsulApiClient(consulAddress)
 	var serviceId = clientName + ":" + strconv.Itoa(client_port)
 	var reg = CreateAgentServiceRegistration(TCP, serviceId, clientName, client_address, client_port)
-	var manager = RpcServiceManager{}.New()
 	if config != nil {
 		manager.RpcConfig = *config
 	}

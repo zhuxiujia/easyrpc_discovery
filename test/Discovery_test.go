@@ -54,7 +54,7 @@ func registerClient() *TestService {
 		{
 			Service:           &act,
 			ServiceName:       "TestService",
-			RemoteServiceName: "TestCoreService",
+			RemoteServiceName: "TestService",
 		},
 	}, true)
 	return &act
