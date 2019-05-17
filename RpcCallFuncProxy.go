@@ -6,7 +6,7 @@ import (
 )
 
 //UseService 可写入每个函数代理方法
-func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retry int) {
+func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServiceBean) error, retry int) {
 	v := reflect.ValueOf(bean.Service)
 	if v.Kind() != reflect.Ptr {
 		panic("UseService: remoteService argument must be a pointer")
@@ -32,7 +32,7 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retr
 
 			var e error
 			var rpcClient RpcClient
-			e = GetClient(&rpcClient)
+			e = GetClient(&rpcClient, bean)
 			for i := 0; i < (retry + 1); i++ {
 				if e != nil {
 					return makeErrors(e, funcField)
@@ -51,7 +51,7 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient) error, retr
 				} else if e.Error() == ConnectError {
 					println("[easyrpc] " + e.Error())
 					rpcClient.Shutdown = true
-					var clientErrr = GetClient(&rpcClient)
+					var clientErrr = GetClient(&rpcClient, bean)
 					if clientErrr != nil {
 						e = clientErrr
 					}

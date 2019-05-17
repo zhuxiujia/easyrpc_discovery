@@ -34,8 +34,8 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 
 	for _, v := range serviceBeanArray {
 		//Todo create link
-		var getClientFunc = func(arg *RpcClient) error {
-			return LoadBalance(&manager, arg, fullAddress, v.RemoteServiceName, balanceType)
+		var getClientFunc = func(arg *RpcClient, b RpcServiceBean) error {
+			return LoadBalance(&manager, arg, fullAddress, b.RemoteServiceName, balanceType)
 		}
 		ProxyClient(v, getClientFunc, manager.RpcConfig.RetryTime)
 	}
