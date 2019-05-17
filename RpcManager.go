@@ -46,17 +46,23 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interface{}, server_address string, server_port int, duration time.Duration, deferFunc func(recover interface{}) string) {
 
 	//注册Rpc服务
+	var funcs = []func(){}
 	for _, v := range serviceBeans {
 		serviceName := reflect.TypeOf(v).Elem().Name()
 		//轮询注册 服务发现
 		var serviceId = serviceName + ":" + strconv.Itoa(server_port)
 		var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port, fmt.Sprint(duration.Seconds()))
 		var client = CreateConsulApiClient(consulAddress)
-		StartTimer(StartType_Now, Execute_coroutine, duration, func() {
+		funcs = append(funcs, func() {
 			DoRegister(reg, client)
 		})
 		easyrpc.RegisterDefer(v, deferFunc)
 	}
+	StartTimer(StartType_Now, Execute_coroutine, duration, func() {
+		for _, item := range funcs {
+			item()
+		}
+	})
 	if server_address == "localhost" || server_address == "127.0.0.1" {
 		server_address = ""
 	}
