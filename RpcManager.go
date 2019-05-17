@@ -3,6 +3,7 @@ package easyrpc_discovery
 //对于同一个资源的读写必须是原子化的，也就是说，同一时间只能有一个goroutine对共享资源进行读写操作
 import (
 	"errors"
+	"fmt"
 	"github.com/zhuxiujia/easyrpc"
 	"github.com/zhuxiujia/easyrpc/easy_jsonrpc"
 	"log"
@@ -18,7 +19,7 @@ var rpcConnectionFactory = RpcConnectionFactory{}
 func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, clientName string, client_address string, client_port int, duration time.Duration, config *RpcConfig, serviceBeanArray []RpcServiceBean, registerClient bool) {
 	var client = CreateConsulApiClient(consulAddress)
 	var serviceId = clientName + ":" + strconv.Itoa(client_port)
-	var reg = CreateAgentServiceRegistration(TCP, serviceId, clientName, client_address, client_port)
+	var reg = CreateAgentServiceRegistration(TCP, serviceId, clientName, client_address, client_port, fmt.Sprint(duration.Seconds()))
 	var manager = RpcServiceManager{}.New()
 	if config != nil {
 		manager.RpcConfig = *config
@@ -49,7 +50,7 @@ func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interf
 		serviceName := reflect.TypeOf(v).Elem().Name()
 		//轮询注册 服务发现
 		var serviceId = serviceName + ":" + strconv.Itoa(server_port)
-		var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port)
+		var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port, fmt.Sprint(duration.Seconds()))
 		var client = CreateConsulApiClient(consulAddress)
 		StartTimer(StartType_Now, Execute_coroutine, duration, func() {
 			DoRegister(reg, client)
