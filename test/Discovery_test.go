@@ -13,31 +13,27 @@ type TestVO struct {
 }
 
 type TestService struct {
-	AddActivity func(arg TestVO, result *TestVO) error
+	AddActivity func(arg TestVO) (TestVO, error)
 }
 
 func (it TestService) New() TestService {
-	it.AddActivity = func(arg TestVO, result *TestVO) error {
+	it.AddActivity = func(arg TestVO) (result TestVO, e error) {
 		var d, _ = json.Marshal(arg)
 		println("arg:", string(d)) //打印远程参数
 		result.Name = "ffff"
-		return nil
+		return result, nil
 	}
 	return it
 }
 
 func TestEnableDiscoveryService(t *testing.T) {
-
 	go registerServer()
 	time.Sleep(time.Second)
-
 	var client = registerClient()
 	for i := 0; i < 5; i++ {
-		var r = TestVO{}
-
-		var e = client.AddActivity(TestVO{
+		var r, e = client.AddActivity(TestVO{
 			Name: "test",
-		}, &r)
+		})
 		time.Sleep(time.Second)
 		if e != nil {
 			println(e.Error())

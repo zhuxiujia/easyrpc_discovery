@@ -88,7 +88,14 @@ func (client *Client) send(call *Call) {
 	// Encode and send the request.
 	client.request.Seq = seq
 	client.request.ServiceMethod = call.ServiceMethod
-	err := client.codec.WriteRequest(&client.request, call.Args)
+
+	var err error
+	if call.Args == nil {
+		err = client.codec.WriteRequest(&client.request, call.Args)
+	} else {
+		err = client.codec.WriteRequest(&client.request, call.Args)
+	}
+
 	if err != nil {
 		client.mutex.Lock()
 		call = client.pending[seq]
@@ -218,8 +225,10 @@ func (c *gobClientCodec) WriteRequest(r *Request, body interface{}) (err error) 
 	if err = c.enc.Encode(r); err != nil {
 		return
 	}
-	if err = c.enc.Encode(body); err != nil {
-		return
+	if body != nil {
+		if err = c.enc.Encode(body); err != nil {
+			return
+		}
 	}
 	return c.encBuf.Flush()
 }
