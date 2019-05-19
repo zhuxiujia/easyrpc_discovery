@@ -23,14 +23,18 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServic
 			e = GetClient(&rpcClient, bean)
 
 			//build ptr
-			var returnV = reflect.New(returnType.ReturnOutType)
-			switch (returnType.ReturnOutType).Kind() {
-			case reflect.Map:
-				returnV.Elem().Set(reflect.MakeMap(returnType.ReturnOutType))
-			case reflect.Slice:
-				returnV.Elem().Set(reflect.MakeSlice(returnType.ReturnOutType, 0, 0))
+			var returnV reflect.Value
+			var result interface{}
+			if returnType.ReturnOutType != nil {
+				returnV = reflect.New(returnType.ReturnOutType)
+				switch (returnType.ReturnOutType).Kind() {
+				case reflect.Map:
+					returnV.Elem().Set(reflect.MakeMap(returnType.ReturnOutType))
+				case reflect.Slice:
+					returnV.Elem().Set(reflect.MakeSlice(returnType.ReturnOutType, 0, 0))
+				}
+				result = returnV.Interface()
 			}
-			var result = returnV.Interface()
 
 			var remoteServiceName = bean.ServiceName + "." + funcField.Name
 			for i := 0; i < (retry + 1); i++ {
