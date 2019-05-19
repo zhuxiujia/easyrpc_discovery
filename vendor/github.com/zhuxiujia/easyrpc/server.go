@@ -324,6 +324,16 @@ func suitableMethods(typ reflect.Value, reportErr bool, deferFunc func(arg inter
 		var errorTypeNum = 0
 		var replyTypeNum = -1
 		// Second arg must be a pointer.
+		if mtype.NumOut() < 0 {
+			panic("[easy_rpc] method " + mtype.String() + " return out number can not = 0 and have a error type return!")
+		}
+		if mtype.NumOut() > 2 {
+			panic("[easy_rpc] method " + mtype.String() + " return out number must <= 2")
+		}
+		if mtype.NumIn() > 1 {
+			panic("[easy_rpc] method " + mtype.String() + " arg num must <=1 !")
+		}
+
 		if mtype.NumOut() > 1 {
 			if mtype.Out(0) == typeOfError {
 				errorTypeNum = 0
