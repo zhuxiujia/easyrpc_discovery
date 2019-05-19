@@ -39,7 +39,7 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServic
 			var remoteServiceName = bean.ServiceName + "." + funcField.Name
 			for i := 0; i < (retry + 1); i++ {
 				if e != nil {
-					return buildReturnValues(&returnType, nil, e)
+					return buildReturnValues(&returnType, &returnV, e)
 				}
 				if rpcClient.Object == nil {
 					continue
