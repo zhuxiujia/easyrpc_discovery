@@ -307,7 +307,7 @@ func suitableMethods(typ reflect.Value, reportErr bool, deferFunc func(arg inter
 		// Method needs three ins: receiver, *args, *reply.
 		if mtype.NumIn() > 2 {
 			if reportErr {
-				log.Printf("easyrpc.Register: method %q has %d input parameters; needs exactly 2\n", mname, mtype.NumIn())
+				log.Printf("easyrpc.Register: "+typ.String()+"."+"method %q has %d input parameters; needs exactly 2\n", mname, mtype.NumIn())
 			}
 			continue
 		}
@@ -316,7 +316,7 @@ func suitableMethods(typ reflect.Value, reportErr bool, deferFunc func(arg inter
 			argType = mtype.In(0)
 			if !isExportedOrBuiltinType(argType) {
 				if reportErr {
-					log.Printf("easyrpc.Register: argument type of method %q is not exported: %q\n", mname, argType)
+					log.Printf("easyrpc.Register: "+typ.String()+"."+"argument type of method %q is not exported: %q\n", mname, argType)
 				}
 				continue
 			}
@@ -325,13 +325,13 @@ func suitableMethods(typ reflect.Value, reportErr bool, deferFunc func(arg inter
 		var replyTypeNum = -1
 		// Second arg must be a pointer.
 		if mtype.NumOut() < 0 {
-			panic("[easy_rpc] method " + mtype.String() + " return out number can not = 0 and have a error type return!")
+			panic("[easy_rpc] method " + typ.String() + "." + mtype.String() + mtype.Name() + " return out number can not = 0 and have a error type return!")
 		}
 		if mtype.NumOut() > 2 {
-			panic("[easy_rpc] method " + mtype.String() + " return out number must <= 2")
+			panic("[easy_rpc] method " + typ.String() + "." + mtype.String() + mtype.Name() + " return out number must <= 2")
 		}
 		if mtype.NumIn() > 1 {
-			panic("[easy_rpc] method " + mtype.String() + " arg num must <=1 !")
+			panic("[easy_rpc] method " + typ.String() + "." + mtype.String() + mtype.Name() + " arg num must <=1 !")
 		}
 
 		if mtype.NumOut() > 1 {
