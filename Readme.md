@@ -1,7 +1,7 @@
 
 # 基于easyrpc 定制的对接consul服务发现
 * 自带负载均衡算法 随机 加权轮询 源地址哈希法
-* 基于easyrpc,类似标准库的api，定义服务没有标准库的要求那么严格（可选不传参数，或者只有一个参数，只有一个返回值）
+* 基于easyrpc,类似标准库的api，定义服务没有标准库的要求那么严格（可选不传参数，或者只有一个参数，只有一个返回值） https://github.com/zhuxiujia/easyrpc
 * 基于easyrpc，负载均衡算法，失败重试，支持动态代理，支持GoMybatis事务，AOP代理，事务嵌套，tag定义事务
 ![Image text](https://zhuxiujia.github.io/gomybatis.io/assets/easy_consul.png)
 
