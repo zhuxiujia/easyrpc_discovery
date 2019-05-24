@@ -9,7 +9,8 @@ import (
 )
 
 type TestVO struct {
-	Name string `json:"name"`
+	Name       string     `json:"name"`
+	CreateTime *time.Time `json:"create_time"`
 }
 
 type TestService struct {
@@ -19,7 +20,8 @@ type TestService struct {
 func (it TestService) New() TestService {
 	it.AddActivity = func(arg TestVO) (result TestVO, e error) {
 		var d, _ = json.Marshal(arg)
-		println("arg:", string(d)) //打印远程参数
+		println("arg:", string(d))                       //打印远程参数
+		println("arg:", string(arg.CreateTime.String())) //打印远程参数
 		result.Name = "ffff"
 		return result, nil
 	}
@@ -30,9 +32,12 @@ func TestEnableDiscoveryService(t *testing.T) {
 	go registerServer()
 	time.Sleep(time.Second)
 	var client = registerClient()
+
+	now, _ := time.Parse("2006-01-02 15:04:05", "2019-05-22 15:13:55")
 	for i := 0; i < 5; i++ {
 		var r, e = client.AddActivity(TestVO{
-			Name: "test",
+			Name:       "test",
+			CreateTime: &now,
 		})
 		time.Sleep(time.Second)
 		if e != nil {
