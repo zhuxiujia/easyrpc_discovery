@@ -1,7 +1,6 @@
 package easyrpc_discovery
 
 import (
-	"github.com/zhuxiujia/easyrpc"
 	"reflect"
 	"strings"
 )
@@ -41,19 +40,15 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServic
 				if e != nil {
 					return buildReturnValues(&returnType, &returnV, e)
 				}
-				if rpcClient.Object == nil {
-					continue
-				}
 				var callArg interface{}
 				if arg.ArgsLen > 0 {
 					callArg = arg.Args[0].Interface()
 				}
-				e = rpcClient.Object.(*easyrpc.Client).Call(remoteServiceName, callArg, result)
+				e = rpcClient.Call(bean.ServiceName, remoteServiceName, callArg, result)
 				if e == nil {
 					return buildReturnValues(&returnType, &returnV, e)
 				} else if e.Error() == ConnectError {
 					println("[easyrpc] " + remoteServiceName + e.Error())
-					rpcClient.Shutdown = true
 					var clientErrr = GetClient(&rpcClient, bean)
 					if clientErrr != nil {
 						e = clientErrr

@@ -88,18 +88,6 @@ func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interf
 func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, remoteService string, balanceType *LoadBalanceType) error {
 	var rpcLoadBalanceClient = manager.ServiceAddressMap[remoteService]
 
-	if arg != nil && arg.Shutdown == true {
-		if rpcLoadBalanceClient != nil {
-			rpcLoadBalanceClient.Delete(arg.Address, func(client *RpcClient) {
-				if client == nil {
-					return
-				}
-				rpcConnectionFactory.Close(client.Object.(*easyrpc.Client))
-			})
-		}
-		arg.Object = nil
-	}
-
 	if rpcLoadBalanceClient == nil || len(rpcLoadBalanceClient.RpcClientsMap) == 0 {
 		return errors.New("no service '" + remoteService + "' available!")
 	}
@@ -107,36 +95,21 @@ func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, 
 	if rpcClient == nil {
 		return errors.New("no service '" + remoteService + "' available!")
 	}
-	if rpcClient.Object == nil {
-		(*rpcClient).Object = createClient(remoteService, rpcClient.Address)
-		if rpcClient.Object == nil {
-			return errors.New("no service '" + remoteService + "' available!")
-		}
-	}
 	*arg = *rpcClient
 	return nil
 }
 
-func createClient(serviceName string, address string) interface{} {
-	client, err := rpcConnectionFactory.GetConnection(serviceName, address)
-	if err != nil {
-		log.Println(err)
-		return nil
-	} else {
-		return client
-	}
-}
 func deleteClient(serviceName string, rpcClient *RpcClient) {
-	if rpcClient != nil && rpcClient.Object != nil {
-		rpcConnectionFactory.Close(rpcClient.Object.(*easyrpc.Client))
+	if rpcClient != nil {
+		rpcClient.Close()
 	}
 }
 func clearAllClient(m map[string]*RpcLoadBalanceClient) {
 	for _, item := range m {
 		if item != nil {
 			item.DeleteAll(func(client *RpcClient) {
-				if client != nil && client.Object != nil {
-					rpcConnectionFactory.Close(client.Object.(*easyrpc.Client))
+				if client != nil {
+					client.Close()
 				}
 			})
 		}

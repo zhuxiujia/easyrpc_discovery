@@ -4,27 +4,41 @@ type RpcClient struct {
 	Address           string //远程地址
 	Pool              *ConnPool
 	LoadBalanceClient *RpcLoadBalanceClient
-	ShutDown          bool
+	Retry             int //重试次数
+	Shutdown          bool
 }
 
-func (it *RpcClient) Call(serviceName string, serviceMethod string, args interface{}, reply interface{}) error {
-	var c, e = it.Pool.GetAndPush(serviceName, it.Address)
-	if e != nil {
-		return e
+func (it *RpcClient) Call(serviceName string, serviceMethod string, args interface{}, reply interface{}) (e error) {
+	if it.Retry == 0 {
+		it.Retry = 1
 	}
-	e = c.Call(serviceMethod, args, reply)
-	if e != nil && e.Error() == ConnError {
-		it.Close()
+	if it.Retry > 0 {
+		for i := 0; i < it.Retry; i++ {
+			var c, e = it.Pool.GetAndPush(serviceName, it.Address)
+			if e != nil {
+				return e
+			}
+			e = c.Call(serviceMethod, args, reply)
+			if e != nil && e.Error() == ConnError {
+				it.Close()
+			}
+			if i+1 == it.Retry {
+				return e
+			}
+		}
 	}
 	return e
 }
 
 func (it *RpcClient) Close() {
+	if it.Shutdown {
+		return
+	}
 	if it.LoadBalanceClient != nil {
 		it.LoadBalanceClient.Delete(it.Address, nil)
 	}
 	if it.Pool != nil {
 		it.Pool.Pop(it.Address)
 	}
-	it.ShutDown = true
+	it.Shutdown = true
 }
