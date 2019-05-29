@@ -16,7 +16,7 @@ func (it ConnPool) New() ConnPool {
 	return it
 }
 
-func (it *ConnPool) Get(serviceName string, addr string) (c *RpcClient, e error) {
+func (it *ConnPool) GetAndPush(serviceName string, addr string) (c *RpcClient, e error) {
 	c = it.clientMap[addr]
 	if c == nil {
 		conn, e := it.createClient(serviceName, addr)
