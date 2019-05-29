@@ -5,9 +5,9 @@ import "github.com/zhuxiujia/easyrpc"
 const ConnError = "connection is shut down"
 
 type ConnPool struct {
-	connMap   map[string]*easyrpc.Client
-	clientMap map[string]*RpcClient
-	RpcConnectionFactory
+	connMap              map[string]*easyrpc.Client
+	clientMap            map[string]*RpcClient
+	RpcConnectionFactory RpcConnectionFactory
 }
 
 func (it ConnPool) New() ConnPool {
