@@ -33,6 +33,15 @@ func (it *ConnPool) Get(serviceName string, addr string) (c *RpcClient, e error)
 	return c, e
 }
 
+func (it *ConnPool) Pop(addr string) {
+	var conn = it.connMap[addr]
+	if conn != nil {
+		conn.Close()
+	}
+	var client = it.clientMap[addr]
+	client.Shutdown = true
+}
+
 func (it *ConnPool) GetCoon(addr string) *easyrpc.Client {
 	return it.connMap[addr]
 }
