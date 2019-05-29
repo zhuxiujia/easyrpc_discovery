@@ -34,13 +34,8 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 		DoRegister(reg, client)
 	})
 
-	var getClientFunc = func(arg *RpcClient, b RpcServiceBean) error {
-		var c, e = LoadBalance(&manager, fullAddress, b.RemoteServiceName, balanceType)
-		if e != nil {
-			return e
-		}
-		*arg = *c
-		return nil
+	var getClientFunc = func(RemoteServiceName string) (c *RpcClient, e error) {
+		return LoadBalance(&manager, fullAddress, RemoteServiceName, balanceType)
 	}
 
 	for _, v := range serviceBeanArray {
