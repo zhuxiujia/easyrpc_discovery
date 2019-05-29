@@ -52,7 +52,7 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServic
 				if e == nil {
 					return buildReturnValues(&returnType, &returnV, e)
 				} else if e.Error() == ConnectError {
-					println("[easyrpc] " + e.Error())
+					println("[easyrpc] " + remoteServiceName + e.Error())
 					rpcClient.Shutdown = true
 					var clientErrr = GetClient(&rpcClient, bean)
 					if clientErrr != nil {
