@@ -100,8 +100,10 @@ func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, 
 		arg.Object = nil
 	}
 
-	if rpcLoadBalanceClient == nil || len(rpcLoadBalanceClient.RpcClientsMap) == 0 {
-		return errors.New("no service '" + remoteService + "' available!")
+	if rpcLoadBalanceClient == nil {
+		var client = RpcLoadBalanceClient{}.New()
+		rpcLoadBalanceClient = &client
+		manager.ServiceAddressMap[remoteService] = rpcLoadBalanceClient
 	}
 	var rpcClient = DoBalance(clientAddr, rpcLoadBalanceClient, balanceType)
 	if rpcClient == nil {
