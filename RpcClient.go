@@ -8,7 +8,15 @@ type RpcClient struct {
 	Shutdown          bool
 }
 
-func (it *RpcClient) Call(serviceName string, serviceMethod string, args interface{}, reply interface{}) (e error) {
+func (it RpcClient) New(addr string, pool *ConnPool, load *RpcLoadBalanceClient, retry int) RpcClient {
+	it.Address = addr
+	it.Pool = pool
+	it.LoadBalanceClient = load
+	it.Retry = retry
+	return it
+}
+
+func (it *RpcClient) Call(serviceName string, serviceAndMethod string, args interface{}, reply interface{}) (e error) {
 	if it.Retry == 0 {
 		it.Retry = 1
 	}
@@ -18,7 +26,7 @@ func (it *RpcClient) Call(serviceName string, serviceMethod string, args interfa
 			if e != nil {
 				return e
 			}
-			e = c.Call(serviceMethod, args, reply)
+			e = c.Call(serviceAndMethod, args, reply)
 			if e != nil && e.Error() == ConnError {
 				it.Close()
 			}

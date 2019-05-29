@@ -6,7 +6,7 @@ import (
 )
 
 //UseService 可写入每个函数代理方法
-func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServiceBean) error, retry int) {
+func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServiceBean) error) {
 	v := reflect.ValueOf(bean.Service)
 	if v.Kind() != reflect.Ptr {
 		panic("UseService: remoteService argument must be a pointer")
@@ -34,29 +34,15 @@ func ProxyClient(bean RpcServiceBean, GetClient func(arg *RpcClient, b RpcServic
 				}
 				result = returnV.Interface()
 			}
-
-			var remoteServiceName = bean.ServiceName + "." + funcField.Name
-			for i := 0; i < (retry + 1); i++ {
-				if e != nil {
-					return buildReturnValues(&returnType, &returnV, e)
-				}
-				var callArg interface{}
-				if arg.ArgsLen > 0 {
-					callArg = arg.Args[0].Interface()
-				}
-				e = rpcClient.Call(bean.ServiceName, remoteServiceName, callArg, result)
-				if e == nil {
-					return buildReturnValues(&returnType, &returnV, e)
-				} else if e.Error() == ConnectError {
-					println("[easyrpc] " + remoteServiceName + e.Error())
-					var clientErrr = GetClient(&rpcClient, bean)
-					if clientErrr != nil {
-						e = clientErrr
-					}
-				} else {
-					return buildReturnValues(&returnType, &returnV, e)
-				}
+			var remoteServiceFunc = bean.ServiceName + "." + funcField.Name
+			if e != nil {
+				return buildReturnValues(&returnType, &returnV, e)
 			}
+			var callArg interface{}
+			if arg.ArgsLen > 0 {
+				callArg = arg.Args[0].Interface()
+			}
+			e = rpcClient.Call(bean.ServiceName, remoteServiceFunc, callArg, result)
 			return buildReturnValues(&returnType, &returnV, e)
 		}
 	})

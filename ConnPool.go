@@ -31,5 +31,6 @@ func (it *ConnPool) Pop(addr string) {
 	var conn = it.connMap[addr]
 	if conn != nil {
 		conn.Close()
+		delete(it.connMap, addr)
 	}
 }

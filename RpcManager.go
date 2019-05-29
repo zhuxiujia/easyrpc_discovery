@@ -24,21 +24,27 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 	if config != nil {
 		manager.RpcConfig = *config
 	}
+	var pool = ConnPool{}.New()
+	var fullAddress = client_address + strconv.Itoa(client_port)
 	StartTimer(StartType_Now, Execute_coroutine, duration, func() {
-		FetchServiceMap(clientName, &manager, client, deleteClient, clearAllClient)
+		FetchServiceMap(clientName, &manager, client, clearAllClient, &pool)
 		if registerClient == false {
 			return
 		}
 		DoRegister(reg, client)
 	})
-	var fullAddress = client_address + strconv.Itoa(client_port)
 
 	var getClientFunc = func(arg *RpcClient, b RpcServiceBean) error {
-		return LoadBalance(&manager, arg, fullAddress, b.RemoteServiceName, balanceType)
+		var c, e = LoadBalance(&manager, fullAddress, b.RemoteServiceName, balanceType)
+		if e != nil {
+			return e
+		}
+		*arg = *c
+		return nil
 	}
+
 	for _, v := range serviceBeanArray {
-		//Todo create link
-		ProxyClient(v, getClientFunc, manager.RpcConfig.RetryTime)
+		ProxyClient(v, getClientFunc)
 	}
 }
 
@@ -85,18 +91,17 @@ func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interf
 /**
  * 随机选取服务
  */
-func LoadBalance(manager *RpcServiceManager, arg *RpcClient, clientAddr string, remoteService string, balanceType *LoadBalanceType) error {
+func LoadBalance(manager *RpcServiceManager, clientAddr string, remoteService string, balanceType *LoadBalanceType) (client *RpcClient, e error) {
 	var rpcLoadBalanceClient = manager.ServiceAddressMap[remoteService]
 
 	if rpcLoadBalanceClient == nil || len(rpcLoadBalanceClient.RpcClientsMap) == 0 {
-		return errors.New("no service '" + remoteService + "' available!")
+		return nil, errors.New("no service '" + remoteService + "' available!")
 	}
 	var rpcClient = DoBalance(clientAddr, rpcLoadBalanceClient, balanceType)
 	if rpcClient == nil {
-		return errors.New("no service '" + remoteService + "' available!")
+		return nil, errors.New("no service '" + remoteService + "' available!")
 	}
-	*arg = *rpcClient
-	return nil
+	return rpcClient, nil
 }
 
 func deleteClient(serviceName string, rpcClient *RpcClient) {

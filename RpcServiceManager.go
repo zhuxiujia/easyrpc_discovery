@@ -11,7 +11,6 @@ const ConnectError = "connection is shut down"
 
 type RpcServiceManager struct {
 	Mutex             sync.Mutex
-	ServiceMap        map[string]*consulapi.AgentService
 	ServiceAddressMap map[string]*RpcLoadBalanceClient //  map[service]map[addr]interface
 	RpcConfig         RpcConfig
 }
@@ -19,13 +18,12 @@ type RpcServiceManager struct {
 func (RpcServiceManager) New() RpcServiceManager {
 	var ServiceManager = RpcServiceManager{
 		Mutex:             sync.Mutex{},
-		ServiceMap:        map[string]*consulapi.AgentService{},
 		ServiceAddressMap: map[string]*RpcLoadBalanceClient{},
 	}
 	return ServiceManager
 }
 
-func FetchServiceMap(clientName string, manager *RpcServiceManager, client *consulapi.Client, deleteClient func(serviceName string, rpcClient *RpcClient), clearAllClient func(m map[string]*RpcLoadBalanceClient)) {
+func FetchServiceMap(clientName string, manager *RpcServiceManager, client *consulapi.Client, clearAllClient func(m map[string]*RpcLoadBalanceClient), pool *ConnPool) {
 	newServiceList, error := client.Agent().Services()
 	if error != nil {
 		return
@@ -43,7 +41,7 @@ func FetchServiceMap(clientName string, manager *RpcServiceManager, client *cons
 		return
 	}
 
-	for key, oldApi := range manager.ServiceMap {
+	for key, oldApi := range newServiceList {
 		var serviceName = oldApi.Service
 		var newApi = newServiceList[key]
 		if newApi == nil && oldApi != nil {
@@ -70,26 +68,19 @@ func FetchServiceMap(clientName string, manager *RpcServiceManager, client *cons
 			rpcLoadBalanceClient = &client
 		}
 		if rpcLoadBalanceClient.RpcClientsMap[addr] == nil {
-			rpcLoadBalanceClient.Append(RpcClient{
-				Address: addr,
-				Object:  nil,
-			})
+			rpcLoadBalanceClient.Append(RpcClient{}.New(addr, pool, rpcLoadBalanceClient, manager.RpcConfig.RetryTime))
 		}
 		manager.ServiceAddressMap[serviceName] = rpcLoadBalanceClient
 	}
-	manager.ServiceMap = newServiceList
 }
 
-func AddOne(manager *RpcServiceManager, remoteService string, address string, createClient func(serviceName string, address string) interface{}) interface{} {
+func AddOne(manager *RpcServiceManager, remoteService string, address string, createClient func(serviceName string, address string) interface{}, pool *ConnPool, load *RpcLoadBalanceClient) interface{} {
 	manager.Mutex.Lock()
 	defer manager.Mutex.Unlock()
 
 	var rpcLoadBalanceClient = manager.ServiceAddressMap[remoteService]
 	var createRpcObject = createClient(remoteService, address)
-	rpcLoadBalanceClient.Append(RpcClient{
-		Address: address,
-		Object:  createRpcObject,
-	})
+	rpcLoadBalanceClient.Append(RpcClient{}.New(address, pool, load, manager.RpcConfig.RetryTime))
 	manager.ServiceAddressMap[remoteService] = rpcLoadBalanceClient
 	return createRpcObject
 }
