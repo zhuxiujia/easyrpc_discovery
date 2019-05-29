@@ -19,7 +19,7 @@ func (it ConnPool) New() ConnPool {
 func (it *ConnPool) GetAndPush(serviceName string, addr string) (c *RpcClient, e error) {
 	c = it.clientMap[addr]
 	if c == nil {
-		conn, e := it.createClient(serviceName, addr)
+		conn, e := it.getAndPushConn(serviceName, addr)
 		if e != nil {
 			return c, e
 		}
@@ -44,12 +44,8 @@ func (it *ConnPool) Pop(addr string) {
 	}
 }
 
-func (it *ConnPool) GetCoon(addr string) *easyrpc.Client {
-	return it.connMap[addr]
-}
-
-func (it ConnPool) createClient(serviceName string, addr string) (c *easyrpc.Client, e error) {
-	var conn = it.GetCoon(addr)
+func (it ConnPool) getAndPushConn(serviceName string, addr string) (c *easyrpc.Client, e error) {
+	var conn = it.connMap[addr]
 	if conn == nil {
 		client, e := it.RpcConnectionFactory.GetConnection(serviceName, addr)
 		if e != nil {
