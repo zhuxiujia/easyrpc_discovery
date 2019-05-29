@@ -33,6 +33,9 @@ func (it *RpcClient) Call(serviceName string, serviceAndMethod string, args inte
 			if i+1 == it.Retry {
 				return e
 			}
+			if e == nil {
+				return nil
+			}
 		}
 	}
 	return e
