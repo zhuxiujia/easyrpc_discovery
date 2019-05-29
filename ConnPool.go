@@ -39,7 +39,9 @@ func (it *ConnPool) Pop(addr string) {
 		conn.Close()
 	}
 	var client = it.clientMap[addr]
-	client.Shutdown = true
+	if client != nil {
+		client.Shutdown = true
+	}
 }
 
 func (it *ConnPool) GetCoon(addr string) *easyrpc.Client {
