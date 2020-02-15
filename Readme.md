@@ -13,7 +13,7 @@ go get github.com/zhuxiujia/easyrpc_discovery
 * 下载consul（为什么使用consul，支持健康检查，kv，注册中心）最新客户端 https://www.consul.io/
 
 * 首先定义服务
-```
+``` go
 type TestVO struct {
 	Name string
 }
@@ -33,7 +33,7 @@ func (it TestService) New() TestService {
 ```
 
 * 首先注册服务端
-```
+``` go
 var act = TestService{}.New()
 
 	//远程服务信息
@@ -49,7 +49,7 @@ var act = TestService{}.New()
 ```
 
 * 首先注册客户端
-```
+``` go
 var act TestService
 	easyrpc_discovery.EnableDiscoveryClient("127.0.0.1:8500", "TestApp", "127.0.0.1", 8500, 5*time.Second, &easyrpc_discovery.RpcConfig{
 		RetryTime: 1,
@@ -63,7 +63,7 @@ var act TestService
 
 ```
 * 测试远程调用
-```
+``` go
     for i := 0; i < 5; i++ {
 		client.AddActivity(TestVO{
 			Name: "test",
