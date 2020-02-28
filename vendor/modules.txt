@@ -25,7 +25,7 @@ github.com/mattn/go-isatty
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
-# github.com/zhuxiujia/easyrpc v1.0.3-0.20190519130950-d66a2addd222
+# github.com/zhuxiujia/easyrpc v1.0.4
 ## explicit
 github.com/zhuxiujia/easyrpc
 github.com/zhuxiujia/easyrpc/easy_jsonrpc

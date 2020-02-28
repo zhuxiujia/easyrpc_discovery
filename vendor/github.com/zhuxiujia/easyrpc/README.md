@@ -5,12 +5,24 @@
 * 标准库默认使用func (* Type)Method(arg,*result) error 的模式,EasyRpc 则把方法移动到结构体里（方便动态代理和Aop以及各种扩展和定制）
 * easyrpc同时支持 无参数，无返回值，或只有参数，只有返回值
 * 支持注册defer函数  easyrpc.RegisterDefer(v,deferFunc) ，防止服务因为不可预知 painc 问题导致程序退出。defer函数可处理问题然后把错误发送还给客户端
-```
-type RpcService struct {
-	NoArg          func() (string, error)           //无参数写法
-	Arg            func(arg string) (string, error) //有参数有返回值
-	NoReturn       func(arg string) error           //无返回值
-	NoArgAndReturn func() error                     //无参数无返回值
+``` go
+type Service struct{
+  Method func(arg ArgType,result *Result) error
+}
+``` 
+``` go
+type Service struct{
+  Method func(arg ArgType) error
+}
+``` 
+``` go
+type Service struct{
+  Method func(result *Result) error
+}
+``` 
+``` go
+type Service struct{
+ Method func() error
 }
 ``` 
 # 使用方法
@@ -20,7 +32,7 @@ type RpcService struct {
 go get github.com/zhuxiujia/easyrpc
 ```
 * 使用
-```
+``` go
 //和go标准库的rpc以及jsonrpc使用方法完全一样,只需把rpc.* 和jsonrpc.* 改成 easyrpc.* 和 easy_jsonrpc.*
 easyrpc.Client.Call()//client
 
