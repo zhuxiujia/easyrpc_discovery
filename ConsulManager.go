@@ -4,6 +4,8 @@ import (
 	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type ConsulCheckType int
@@ -12,6 +14,65 @@ const (
 	TCP ConsulCheckType = iota
 	HTTP
 )
+
+type ConsulManager struct {
+	ConsulAddress string
+	reg           *consulapi.AgentServiceRegistration
+	client        *consulapi.Client
+	manager       *RpcServiceManager
+	clearFunc     *func(m map[string]*RpcLoadBalanceClient)
+	pool          *ConnPool
+}
+
+func (s *ConsulManager) InitRegister(
+	serviceName string,
+	address string,
+	port int,
+	duration time.Duration) {
+	var serviceId = serviceName + ":" + strconv.Itoa(port)
+	var client = s.CreateConsulApiClient(s.ConsulAddress)
+	var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, address, port, fmt.Sprint(duration.Seconds()))
+	s.client = client
+	s.reg = reg
+}
+
+func (s *ConsulManager) DoRegister() {
+	s.DoRegisterConsul(s.reg, s.client)
+}
+
+func (s *ConsulManager) InitServiceFetcher(
+	manager *RpcServiceManager,
+	clearFunc func(m map[string]*RpcLoadBalanceClient),
+	pool *ConnPool) {
+	s.manager = manager
+	s.clearFunc = &clearFunc
+	s.pool = pool
+}
+
+func (s *ConsulManager) DoFetch() {
+	var newService map[string]*AgentService
+	newServiceList, e := s.client.Agent().Services()
+	if e != nil {
+		return
+	}
+	if newServiceList == nil {
+		return
+	}
+	newService = map[string]*AgentService{}
+	for k, _ := range newServiceList {
+		if !strings.Contains(k, "Service") {
+			delete(newServiceList, k)
+		}
+	}
+	for k, v := range newServiceList {
+		newService[k] = &AgentService{
+			Service: v.Service,
+			Port:    v.Port,
+			Address: v.Address,
+		}
+	}
+	s.manager.SetNewServiceMap(s.manager, newService, *s.clearFunc, s.pool)
+}
 
 func CreateAgentServiceRegistration(consulCheckType ConsulCheckType, id string, serviceName string, address string, port int, time string) *consulapi.AgentServiceRegistration {
 	fmt.Println("[ConsulManager]start register consul Rpc Service")
@@ -41,7 +102,7 @@ func CreateAgentServiceRegistration(consulCheckType ConsulCheckType, id string, 
 	return registration
 }
 
-func DoRegister(registration *consulapi.AgentServiceRegistration, client *consulapi.Client) error {
+func (s *ConsulManager) DoRegisterConsul(registration *consulapi.AgentServiceRegistration, client *consulapi.Client) error {
 	err := client.Agent().ServiceRegister(registration)
 	if err != nil {
 		fmt.Println("[ConsulManager]Register Consul Rpc Service error=", err)
@@ -51,7 +112,7 @@ func DoRegister(registration *consulapi.AgentServiceRegistration, client *consul
 	return err
 }
 
-func CreateConsulApiClient(consulAddress string) *consulapi.Client {
+func (s *ConsulManager) CreateConsulApiClient(consulAddress string) *consulapi.Client {
 	config := consulapi.DefaultConfig()
 	config.Address = consulAddress
 	client, err := consulapi.NewClient(config)

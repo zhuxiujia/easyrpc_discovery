@@ -1,7 +1,6 @@
 package easyrpc_discovery
 
 import (
-	consulapi "github.com/hashicorp/consul/api"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,24 +22,26 @@ func (RpcServiceManager) New() RpcServiceManager {
 	return ServiceManager
 }
 
-func FetchServiceMap(clientName string, manager *RpcServiceManager, client *consulapi.Client, clearAllClient func(m map[string]*RpcLoadBalanceClient), pool *ConnPool) {
-	newServiceList, error := client.Agent().Services()
-	if error != nil {
+type AgentService struct {
+	Service string
+	Port    int
+	Address string
+}
+
+func (this *RpcServiceManager) SetNewServiceMap(manager *RpcServiceManager, newServiceList map[string]*AgentService, clearAllClient func(m map[string]*RpcLoadBalanceClient), pool *ConnPool) {
+	if newServiceList == nil {
 		return
 	}
-
 	for k, _ := range newServiceList {
 		if !strings.Contains(k, "Service") {
 			delete(newServiceList, k)
 		}
 	}
-
 	if len(newServiceList) == 0 && len(manager.ServiceAddressMap) != 0 {
 		clearAllClient(manager.ServiceAddressMap)
 		manager.ServiceAddressMap = make(map[string]*RpcLoadBalanceClient)
 		return
 	}
-
 	for key, oldApi := range newServiceList {
 		var serviceName = oldApi.Service
 		var newApi = newServiceList[key]
@@ -49,19 +50,15 @@ func FetchServiceMap(clientName string, manager *RpcServiceManager, client *cons
 			var rpcLoadBalanceClient = manager.ServiceAddressMap[serviceName]
 			if rpcLoadBalanceClient != nil {
 				rpcLoadBalanceClient.DeleteAll(func(client *RpcClient) {
-					deleteClient(serviceName, client)
+					deleteClient(client)
 				})
 			}
 			delete(manager.ServiceAddressMap, serviceName)
 		}
 	}
-
 	for _, v := range newServiceList {
 		var addr = v.Address + ":" + strconv.Itoa(v.Port)
 		var serviceName = v.Service
-		if serviceName == clientName {
-			continue
-		}
 		var rpcLoadBalanceClient = manager.ServiceAddressMap[serviceName]
 		if rpcLoadBalanceClient == nil {
 			var client = RpcLoadBalanceClient{}.New()
@@ -74,7 +71,7 @@ func FetchServiceMap(clientName string, manager *RpcServiceManager, client *cons
 	}
 }
 
-func AddOne(manager *RpcServiceManager, remoteService string, address string, createClient func(serviceName string, address string) interface{}, pool *ConnPool, load *RpcLoadBalanceClient) interface{} {
+func (this *RpcServiceManager) AddOne(manager *RpcServiceManager, remoteService string, address string, createClient func(serviceName string, address string) interface{}, pool *ConnPool, load *RpcLoadBalanceClient) interface{} {
 	manager.Mutex.Lock()
 	defer manager.Mutex.Unlock()
 

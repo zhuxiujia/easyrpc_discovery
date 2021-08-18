@@ -3,7 +3,6 @@ package easyrpc_discovery
 //对于同一个资源的读写必须是原子化的，也就是说，同一时间只能有一个goroutine对共享资源进行读写操作
 import (
 	"errors"
-	"fmt"
 	"github.com/zhuxiujia/easyrpc"
 	"github.com/zhuxiujia/easyrpc/easy_jsonrpc"
 	"log"
@@ -15,23 +14,61 @@ import (
 
 var rpcConnectionFactory = RpcConnectionFactory{}
 
+// Register Service Register
+type Register interface {
+	InitRegister(
+		serviceName string,
+		address string,
+		port int,
+		duration time.Duration)
+
+	DoRegister()
+}
+
+// ServiceFetcher Service List fetcher
+type ServiceFetcher interface {
+	InitServiceFetcher(manager *RpcServiceManager,
+		clearFunc func(m map[string]*RpcLoadBalanceClient),
+		pool *ConnPool)
+
+	DoFetch()
+}
+
 //定义一个服务发现客户端
-func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, clientName string, client_address string, client_port int, duration time.Duration, config *RpcConfig, serviceBeanArray []RpcServiceBean, registerClient bool) {
-	var client = CreateConsulApiClient(consulAddress)
-	var serviceId = clientName + ":" + strconv.Itoa(client_port)
-	var reg = CreateAgentServiceRegistration(TCP, serviceId, clientName, client_address, client_port, fmt.Sprint(duration.Seconds()))
+func EnableDiscoveryClient(
+	balanceType *LoadBalanceType,
+	clientName string,
+	clientAddress string,
+	clientPort int,
+	duration time.Duration,
+	config *RpcConfig,
+	serviceBeanArray []RpcServiceBean, reg Register, fetch ServiceFetcher) {
 	var manager = RpcServiceManager{}.New()
 	if config != nil {
 		manager.RpcConfig = *config
 	}
 	var pool = ConnPool{}.New()
-	var fullAddress = client_address + strconv.Itoa(client_port)
+
+	if reg != nil {
+		reg.InitRegister(clientName, clientAddress, clientPort, duration)
+	}
+	if fetch != nil {
+		fetch.InitServiceFetcher(&manager, clearAllClient, &pool)
+	}
+	var fullAddress = clientAddress + strconv.Itoa(clientPort)
 	StartTimer(StartType_Now, Execute_coroutine, duration, func() {
-		FetchServiceMap(clientName, &manager, client, clearAllClient, &pool)
-		if registerClient == false {
-			return
+		//FetchServiceMap(clientName, &manager, client, clearAllClient, &pool)
+		//if registerClient == false {
+		//	return
+		//}
+		//DoRegister(reg, client)
+
+		if fetch != nil {
+			fetch.DoFetch()
 		}
-		DoRegister(reg, client)
+		if reg != nil {
+			reg.DoRegister()
+		}
 	})
 
 	var getClientFunc = func(RemoteServiceName string) (c *RpcClient, e error) {
@@ -44,18 +81,23 @@ func EnableDiscoveryClient(balanceType *LoadBalanceType, consulAddress string, c
 }
 
 //定义一个服务发现服务端
-func EnableDiscoveryService(consulAddress string, serviceBeans map[string]interface{}, server_address string, server_port int, duration time.Duration, deferFunc func(recover interface{}) string) {
-
+func EnableDiscoveryService(
+	serviceBeans map[string]interface{},
+	server_address string,
+	server_port int,
+	duration time.Duration,
+	deferFunc func(recover interface{}) string,
+	newRegisterFunc func() Register,
+) {
 	//注册Rpc服务
 	var funcs = []func(){}
 	for _, v := range serviceBeans {
 		serviceName := reflect.TypeOf(v).Elem().Name()
 		//轮询注册 服务发现
-		var serviceId = serviceName + ":" + strconv.Itoa(server_port)
-		var reg = CreateAgentServiceRegistration(TCP, serviceId, serviceName, server_address, server_port, fmt.Sprint(duration.Seconds()))
-		var client = CreateConsulApiClient(consulAddress)
+		var reg = newRegisterFunc()
+		reg.InitRegister(serviceName, server_address, server_port, duration)
 		funcs = append(funcs, func() {
-			DoRegister(reg, client)
+			reg.DoRegister()
 		})
 		easyrpc.RegisterDefer(v, deferFunc)
 	}
@@ -99,7 +141,7 @@ func LoadBalance(manager *RpcServiceManager, clientAddr string, remoteService st
 	return rpcClient, nil
 }
 
-func deleteClient(serviceName string, rpcClient *RpcClient) {
+func deleteClient(rpcClient *RpcClient) {
 	if rpcClient != nil {
 		rpcClient.Close()
 	}

@@ -47,8 +47,9 @@ func TestEnableDiscoveryService(t *testing.T) {
 }
 
 func registerClient() *TestService {
+	var consulManager = ConsulManager{ConsulAddress: "127.0.0.1:8500"}
 	var act TestService
-	EnableDiscoveryClient(nil, "127.0.0.1:8500", "TestApp", "127.0.0.1", 8500, 5*time.Second, &RpcConfig{
+	EnableDiscoveryClient(nil, "TestApp", "127.0.0.1", 8500, 5*time.Second, &RpcConfig{
 		RetryTime: 1,
 	}, []RpcServiceBean{
 		{
@@ -56,13 +57,12 @@ func registerClient() *TestService {
 			ServiceName:       "TestService",
 			RemoteServiceName: "TestService",
 		},
-	}, true)
+	}, &consulManager, &consulManager)
 	return &act
 }
 
 func registerServer() {
 	var act = TestService{}.New()
-
 	//远程服务信息
 	var address = "127.0.0.1"
 	var consul = "127.0.0.1:8500"
@@ -73,5 +73,7 @@ func registerServer() {
 	var deferFunc = func(recover interface{}) string {
 		return fmt.Sprint(recover)
 	}
-	EnableDiscoveryService(consul, services, address, port, 5*time.Second, deferFunc)
+	EnableDiscoveryService(services, address, port, 5*time.Second, deferFunc, func() Register {
+		return &ConsulManager{ConsulAddress: consul}
+	})
 }
