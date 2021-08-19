@@ -2,7 +2,6 @@ package easyrpc_discovery
 
 import (
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -28,14 +27,10 @@ type AgentService struct {
 	Address string
 }
 
+// SetNewServiceMap The premise of calling this method is to filter out Is not a service
 func (this *RpcServiceManager) SetNewServiceMap(manager *RpcServiceManager, newServiceList map[string]*AgentService, clearAllClient func(m map[string]*RpcLoadBalanceClient), pool *ConnPool) {
 	if newServiceList == nil {
 		return
-	}
-	for k, _ := range newServiceList {
-		if !strings.Contains(k, "Service") {
-			delete(newServiceList, k)
-		}
 	}
 	if len(newServiceList) == 0 && len(manager.ServiceAddressMap) != 0 {
 		clearAllClient(manager.ServiceAddressMap)
