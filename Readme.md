@@ -9,8 +9,22 @@
 * 使用方法
 ```
 go get github.com/zhuxiujia/easyrpc_discovery
+go get https://github.com/zhuxiujia/easy_discovery_consul
 ```
 * 下载consul（为什么使用consul，支持健康检查，kv，注册中心）最新客户端 https://www.consul.io/
+```
+* 启动consul服务注册中心
+```
+//下载consul最新版，linux版(可选)
+./consul agent -dev  -client 0.0.0.0 -ui
+```
+或者
+```
+//下载consul最新版，windows版(可选)
+consul.exe agent -dev  -client 0.0.0.0 -ui
+```
+如果以上不满足，可以自定义实现Register接口和（注册到注册中心）ServiceFetcher接口（获取服务列表）来支持更多的注册中心
+
 
 * 首先定义服务
 ``` go
@@ -36,22 +50,28 @@ func (it TestService) New() TestService {
 ``` go
 var act = TestService{}.New()
 
+	var act = TestService{}.New()
 	//远程服务信息
-	var service = "TestService"
 	var address = "127.0.0.1"
 	var consul = "127.0.0.1:8500"
-	var port = 1234
+	var port = 8098
 
 	var services = make(map[string]interface{}, 0)
 	services["TestService"] = &act
-	easyrpc_discovery.EnableDiscoveryService(consul, service, services, address, port, 5*time.Second)
+	var deferFunc = func(recover interface{}) string {
+		return fmt.Sprint(recover)
+	}
+	easyrpc_discovery.EnableDiscoveryService(services, address, port, 5*time.Second, deferFunc, func() easyrpc_discovery.Register {
+		return &easy_discovery_consul.ConsulManager{ConsulAddress: consul}
+	})
 
 ```
 
 * 首先注册客户端
 ``` go
-var act TestService
-	easyrpc_discovery.EnableDiscoveryClient("127.0.0.1:8500", "TestApp", "127.0.0.1", 8500, 5*time.Second, &easyrpc_discovery.RpcConfig{
+    var consulManager = easy_discovery_consul.ConsulManager{ConsulAddress: "127.0.0.1:8500"}
+	var act TestService
+	easyrpc_discovery.EnableDiscoveryClient(nil, "TestApp", "127.0.0.1", 8500, 5*time.Second, &easyrpc_discovery.RpcConfig{
 		RetryTime: 1,
 	}, []easyrpc_discovery.RpcServiceBean{
 		{
@@ -59,7 +79,7 @@ var act TestService
 			ServiceName:       "TestService",
 			RemoteServiceName: "TestService",
 		},
-	}, true)
+	}, &consulManager, &consulManager)
 
 ```
 * 测试远程调用
@@ -70,16 +90,6 @@ var act TestService
 		})
 		time.Sleep(time.Second)
 	}
-```
-* 启动consul服务注册中心
-```
-//下载consul最新版，linux版(可选)
-./consul agent -dev  -client 0.0.0.0 -ui  
-```
-或者
-```
-//下载consul最新版，windows版(可选)
-consul.exe agent -dev  -client 0.0.0.0 -ui
 ```
 * 如果以上配置正确，打开浏览器 http://localhost:8500 可以看到服务启动成功,然后即可访问微服务了（client.AddActivity（）....更多）
 
