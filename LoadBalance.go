@@ -63,13 +63,13 @@ func (this *RpcLoadBalanceClient) DeleteAll(DeleteFunc func(client *RpcClient)) 
 type LoadBalanceType int
 
 const (
-	LoadBalanceType_Round  LoadBalanceType = iota //加权轮询
+	LoadBalanceType_Round  LoadBalanceType = iota //轮询
 	LoadBalanceType_Random                        //随机
 	LoadBalanceType_HASH                          //源地址哈希法
 )
 
 //负载均衡实现类
-//目前实现 随机，加权轮询,源地址哈希法
+//目前实现 随机，轮询,源地址哈希法
 func DoBalance(requestIp string, balanceClient *RpcLoadBalanceClient, balanceType *LoadBalanceType) *RpcClient {
 	if balanceClient == nil || len(balanceClient.rpcClients) == 0 {
 		return nil
